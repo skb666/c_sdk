@@ -1,8 +1,7 @@
 #include "test.h"
+
 #include "stdio.h"
 
-void test()
-{
+void test() {
     printf("test\r\n");
 }
-
