@@ -1,0 +1,4 @@
+# Components configuration
+CONFIG_ADIF_ENABLED=y
+CONFIG_EJET_ENABLED=y
+CONFIG_EPUMP_ENABLED=y

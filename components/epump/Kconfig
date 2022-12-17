@@ -1,0 +1,6 @@
+config EPUMP_ENABLED
+    bool "enable epump"
+    help
+        基于I/O事件通知、非阻塞通信、多路复用、多线程等机制开发的事件驱动模型应用开发框架
+    default n
+    select ADIF_ENABLED

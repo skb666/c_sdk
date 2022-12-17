@@ -1,0 +1,5 @@
+build
+.config.mk
+.flash.conf.json
+
+ejet.log

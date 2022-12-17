@@ -1,0 +1,5 @@
+config ADIF_ENABLED
+    bool "enable adif"
+    help
+        常用数据结构和算法基础库
+    default n

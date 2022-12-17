@@ -31,3 +31,10 @@ jobs:
         ./build/template
         python project.py clean
         python project.py distclean
+    - name: Test build ejetsrv
+      run: |
+        cd project/ejetsrv
+        python project.py build
+        ./build/ejetsrv
+        python project.py clean
+        python project.py distclean

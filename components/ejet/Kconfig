@@ -1,0 +1,7 @@
+config EJET_ENABLED
+    bool "enable ejet"
+    help
+        事件驱动模型、多线程、大并发连接的轻量级的高性能Web服务器，支持HTTP/1.0和HTTP/1.1协议，并支持HTTP Proxy、Tunnel等功能
+    default n
+    select ADIF_ENABLED
+    select EPUMP_ENABLED

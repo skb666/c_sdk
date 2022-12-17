@@ -1,3 +1,12 @@
 [submodule "tools/kconfig/Kconfiglib"]
 	path = tools/kconfig/Kconfiglib
 	url = https://github.com/skb666/Kconfiglib.git
+[submodule "components/adif/adif"]
+	path = components/adif/adif
+	url = https://github.com/skb666/adif.git
+[submodule "components/epump/epump"]
+	path = components/epump/epump
+	url = https://github.com/skb666/epump.git
+[submodule "components/ejet/ejet"]
+	path = components/ejet/ejet
+	url = https://github.com/skb666/ejet.git
