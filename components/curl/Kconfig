@@ -1,0 +1,5 @@
+config CURL_ENABLED
+    bool "enable curl"
+    help
+        通过 vcpkg 安装的 libcurl
+    default n

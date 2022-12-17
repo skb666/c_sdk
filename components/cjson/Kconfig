@@ -1,0 +1,12 @@
+config CJSON_ENABLED
+    bool "enable cjson"
+    help
+        ANSI-C 标准的 JSON 解析器
+    default n
+
+config CJSON_UTILS_SUPPORT
+    depends on CJSON_ENABLED
+    bool "support cjson_utils"
+    help
+        开启以支持 JSON 解析器拓展语法
+    default n
