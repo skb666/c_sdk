@@ -41,3 +41,11 @@ jobs:
         ./build/openai_nc &
         python project.py clean
         python project.py distclean
+    - name: Test build test
+      run: |
+        sudo apt install -y libicu-dev
+        cd project/test
+        python project.py build
+        echo "hello 你好呀" | ./build/test
+        python project.py clean
+        python project.py distclean
