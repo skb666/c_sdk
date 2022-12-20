@@ -24,12 +24,12 @@
 #define LOG_COLOR_PURPLE "\033[1;35m"
 #define LOG_COLOR_RESET "\033[0m"
 
-#define LOGCINFO(tag, fmt, ...) printf(LOG_COLOR_BLUE "[ %s ] " LOG_COLOR_RESET fmt, tag, ##__VA_ARGS__);
-#define LOGCWARN(tag, fmt, ...) printf(LOG_COLOR_BLUE "[ %s ] " LOG_COLOR_RESET LOG_COLOR_YELLOW fmt LOG_COLOR_RESET, tag, ##__VA_ARGS__);
-#define LOGCERR(tag, fmt, ...) printf(LOG_COLOR_BLUE "[ %s ] " LOG_COLOR_RESET LOG_COLOR_RED fmt LOG_COLOR_RESET, tag, ##__VA_ARGS__);
-#define LOGINFO(tag, fmt, ...) printf(LOG_COLOR_BLUE "[ %s ] " LOG_COLOR_RESET fmt "\n", tag, ##__VA_ARGS__);
-#define LOGWARN(tag, fmt, ...) printf(LOG_COLOR_BLUE "[ %s ] " LOG_COLOR_RESET LOG_COLOR_YELLOW fmt LOG_COLOR_RESET "\n", tag, ##__VA_ARGS__);
-#define LOGERR(tag, fmt, ...) printf(LOG_COLOR_BLUE "[ %s ] " LOG_COLOR_RESET LOG_COLOR_RED fmt LOG_COLOR_RESET "\n", tag, ##__VA_ARGS__);
+#define LOGCINFO(tag, fmt, ...) printf(LOG_COLOR_BLUE "\r[ %s ] " LOG_COLOR_RESET fmt, tag, ##__VA_ARGS__);
+#define LOGCWARN(tag, fmt, ...) printf(LOG_COLOR_BLUE "\r[ %s ] " LOG_COLOR_RESET LOG_COLOR_YELLOW fmt LOG_COLOR_RESET, tag, ##__VA_ARGS__);
+#define LOGCERR(tag, fmt, ...) printf(LOG_COLOR_BLUE "\r[ %s ] " LOG_COLOR_RESET LOG_COLOR_RED fmt LOG_COLOR_RESET, tag, ##__VA_ARGS__);
+#define LOGINFO(tag, fmt, ...) printf(LOG_COLOR_BLUE "\r[ %s ] " LOG_COLOR_RESET fmt "\n", tag, ##__VA_ARGS__);
+#define LOGWARN(tag, fmt, ...) printf(LOG_COLOR_BLUE "\r[ %s ] " LOG_COLOR_RESET LOG_COLOR_YELLOW fmt LOG_COLOR_RESET "\n", tag, ##__VA_ARGS__);
+#define LOGERR(tag, fmt, ...) printf(LOG_COLOR_BLUE "\r[ %s ] " LOG_COLOR_RESET LOG_COLOR_RED fmt LOG_COLOR_RESET "\n", tag, ##__VA_ARGS__);
 
 #define MY_LOGE(tag, fmt, ...)                           \
     do {                                                 \

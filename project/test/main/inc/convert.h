@@ -12,14 +12,14 @@
 #define _CONVERT_H_
 
 #include <stdbool.h>
+#include <unicode/ucnv.h>
+#include <unicode/ucnv_err.h>
+#include <unicode/ucsdet.h>
+#include <unicode/uloc.h>
+#include <unicode/ustring.h>
+#include <unicode/utypes.h>
 
 #include "flagcb.h"
-#include "unicode/ucnv.h"
-#include "unicode/ucnv_err.h"
-#include "unicode/ucsdet.h"
-#include "unicode/uloc.h"
-#include "unicode/ustring.h"
-#include "unicode/utypes.h"
 
 UErrorCode detect_ICU(const char* buffer, const char* hint,
                       char** encoding, char** lang, int32_t* confidence);

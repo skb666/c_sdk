@@ -21,6 +21,7 @@ void usage(char *arg) {
 int main(int argc, char *argv[]) {
     openai_api_init();
 
+    // 设置默认值
     char *ip = "0.0.0.0";
     uint16_t port = 8888;
 
