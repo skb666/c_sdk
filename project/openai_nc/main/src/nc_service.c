@@ -66,6 +66,12 @@ static int8_t equal(void *A, void *B) {
     return *(int *)A == *(int *)B;
 }
 
+typedef enum {
+    M_CTRL,
+    M_API,
+    M_NOTICE,
+} MODE;
+
 // 异步监听套接字
 void SocketAccept(int fd) {
     LinkedList client_fds;
@@ -96,9 +102,15 @@ void SocketAccept(int fd) {
         goto linklist_clean;
     }
 
+    MODE mode = M_CTRL;
     char buf[4096] = {0};
     int buf_size = sizeof(buf);
-    int total = 0;
+    int buf_len = 0;
+    int max_tokens = 4000;
+    float temperature = 0.8;
+    float top_p = 1.0;
+    float frequency_penalty = 0.0;
+    float presence_penalty = 0.0;
     int ret = 0;
     while (1) {
         int num = epoll_wait(epfd, events, MAX_FD_NUM, -1);
@@ -111,30 +123,104 @@ void SocketAccept(int fd) {
                 if (events[i].data.fd == STDIN_FILENO) {
                     /* 标准输入事件 */
                     memset(buf, 0, sizeof(buf));
-                    total = 0;
-                    while (total < buf_size) {
-                        ret = read(0, buf + total, buf_size - total);
+                    buf_len = 0;
+                    while (buf_len < buf_size) {
+                        ret = read(0, buf + buf_len, buf_size - buf_len);
                         if (ret < 0) {
                             if (errno == EAGAIN) {
-                                MY_LOGCI(TAG, "scanf: %s", buf);
+                                MY_LOGCI(TAG, "stdin: %s", buf);
                                 break;
                             }
-                            MY_LOGW(TAG, "scanf error: %s", strerror(errno));
+                            MY_LOGW(TAG, "stdin error: %s", strerror(errno));
                             break;
                         }
-                        total += ret;
+                        buf_len += ret;
                     }
-                    // 处理每一个 client
-                    for (LinkedListNode *p = client_fds.root; p != NULL; p = p->next) {
-                        ret = send(p->data, "\rnotice: ", 9, 0);
-                        ret = send(p->data, buf, total, 0);
-                        ret = send(p->data, "> ", 2, 0);
-                        if (ret < 0) {
-                            MY_LOGW(TAG, "send error: %s", strerror(errno));
-                            // 中途有客户端断连或其他错误 跳过
-                            continue;
+                    if (!strncmp(buf, "mode ctrl", 9)) {
+                        mode = M_CTRL;
+                        MY_LOGI(TAG, "mode translate to ctrl");
+                        continue;
+                    } else if (!strncmp(buf, "mode api", 8)) {
+                        mode = M_API;
+                        MY_LOGI(TAG, "mode translate to api");
+                        continue;
+                    } else if (!strncmp(buf, "mode notice", 11)) {
+                        mode = M_NOTICE;
+                        MY_LOGI(TAG, "mode translate to notice");
+                        continue;
+                    } else if (!strncmp(buf, "mode", 4)) {
+                        switch (mode) {
+                            case M_CTRL: {
+                                MY_LOGI(TAG, "mode: ctrl");
+                            } break;
+                            case M_API: {
+                                MY_LOGI(TAG, "mode: api");
+                            } break;
+                            case M_NOTICE: {
+                                MY_LOGI(TAG, "mode: notice");
+                            } break;
+                            default: {
+                                MY_LOGW(TAG, "Wrong pattern");
+                            } break;
                         }
-                        MY_LOGCI(TAG, "[%d] send: %s", p->data, buf);
+                        continue;
+                    }
+                    switch (mode) {
+                        case M_CTRL: {
+                            if (!strncmp(buf, "exit", 4)) {
+                                MY_LOGI(TAG, "End of service");
+                                return;
+                            } else if (!strncmp(buf, "set ", 4)) {
+                                sscanf(buf + 4, "%d%f%f%f%f", &max_tokens, &temperature, &top_p, &frequency_penalty, &presence_penalty);
+                                MY_LOGI(TAG, "       max_tokens: %d", max_tokens);
+                                MY_LOGI(TAG, "      temperature: %.1f", temperature);
+                                MY_LOGI(TAG, "            top_p: %.1f", top_p);
+                                MY_LOGI(TAG, "frequency_penalty: %.1f", frequency_penalty);
+                                MY_LOGI(TAG, " presence_penalty: %.1f", presence_penalty);
+                            } else if (!strncmp(buf, "list", 4)) {
+                                MY_LOGCI(TAG, "client_fds: [ ");
+                                for (LinkedListNode *p = client_fds.root; p != NULL; p = p->next) {
+                                    printf("%d ", p->data);
+                                }
+                                printf("]\n");
+                            }
+                        } break;
+                        case M_API: {
+                            // TODO: 调用 openai api 问问题，由于同一个 key，所以这里阻塞，各个客户端请求排队处理，不能并行
+                            cJSON *resp = openai_api_run(buf, max_tokens, temperature, top_p, frequency_penalty, presence_penalty);
+                            if (NULL == resp) {
+                                MY_LOGW(TAG, "openai return error: %d", __LINE__);
+                                continue;
+                            }
+                            cJSON *chs = cJSON_GetObjectItem(resp, "choices");
+                            if (NULL == chs) {
+                                MY_LOGW(TAG, "openai return error: %d", __LINE__);
+                                cJSON_Delete(resp);
+                                continue;
+                            }
+                            // 有 choices 下面就不会出错
+                            cJSON *itm = cJSON_GetArrayItem(chs, 0);
+                            char *txt = cJSON_GetObjectItem(itm, "text")->valuestring;
+                            MY_LOGCI(TAG, "api: %s\n", txt);
+                            cJSON_Delete(resp);
+                        } break;
+                        case M_NOTICE: {
+                            // 处理每一个 client
+                            for (LinkedListNode *p = client_fds.root; p != NULL; p = p->next) {
+                                ret = send(p->data, "\rnotice: ", 9, 0);
+                                ret = send(p->data, buf, buf_len, 0);
+                                ret = send(p->data, "> ", 2, 0);
+                                if (ret < 0) {
+                                    MY_LOGW(TAG, "send error: %s", strerror(errno));
+                                    // 中途有客户端断连或其他错误 跳过
+                                    continue;
+                                }
+                                MY_LOGCI(TAG, "[%d] send: %s", p->data, buf);
+                            }
+                        } break;
+                        default: {
+                            MY_LOGW(TAG, "Wrong pattern");
+                        } break;
                     }
                 } else if (events[i].data.fd == fd) {
                     /* 监听端套接字事件 */
@@ -172,16 +258,16 @@ void SocketAccept(int fd) {
                 } else {
                     /* 客户端套接字事件 */
                     memset(buf, 0, sizeof(buf));
-                    total = 0;
-                    while (total < buf_size) {
+                    buf_len = 0;
+                    while (buf_len < buf_size) {
                         // int recv(描述符，空间，数据长度，标志位)
                         // 返回值：实际获取大小， 0-连接断开； -1-出错了
-                        ret = recv(events[i].data.fd, buf + total, buf_size - total, 0);
+                        ret = recv(events[i].data.fd, buf + buf_len, buf_size - buf_len, 0);
                         if (ret < 0) {
                             /* 所有数据都读完了 */
                             if (errno == EAGAIN) {
                                 MY_LOGCI(TAG, "[%d] recv msg: %s", events[i].data.fd, buf);
-                                if (total <= 3) {
+                                if (buf_len <= 3) {
                                     ret = send(events[i].data.fd, "None\n\n> ", 8, 0);
                                     if (ret < 0) {
                                         MY_LOGW(TAG, "send error: %s", strerror(errno));
@@ -194,7 +280,7 @@ void SocketAccept(int fd) {
                                     goto remove_client;
                                 }
                                 // TODO: 调用 openai api 问问题，由于同一个 key，所以这里阻塞，各个客户端请求排队处理，不能并行
-                                cJSON *response = openai_api_run(buf);
+                                cJSON *response = openai_api_run(buf, max_tokens, temperature, top_p, frequency_penalty, presence_penalty);
                                 if (NULL == response) {
                                     MY_LOGW(TAG, "openai return error: %d", __LINE__);
                                     ret = send(events[i].data.fd, "\n\n> ", 4, 0);
@@ -233,7 +319,7 @@ void SocketAccept(int fd) {
                             LinkedListRemove(&client_fds, events[i].data.fd, equal);
                             break;
                         }
-                        total += ret;
+                        buf_len += ret;
                     }
                 }
             }

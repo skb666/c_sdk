@@ -36,7 +36,7 @@ static size_t write_callback(void *contents, size_t size, size_t nmemb, void *us
     return array_size;
 }
 
-cJSON *openai_api_run(char *content) {
+cJSON *openai_api_run(char *content, int max_tokens, float temperature, float top_p, float frequency_penalty, float presence_penalty) {
     char *buffer = (char *)malloc(4096 * sizeof(char));
     if (!buffer) {
         MY_LOGE(TAG, "Run out of memory: %d", __LINE__);
@@ -47,11 +47,11 @@ cJSON *openai_api_run(char *content) {
     cJSON *json = cJSON_CreateObject();
     cJSON_AddStringToObject(json, "model", "text-davinci-003");
     cJSON_AddStringToObject(json, "prompt", content);
-    cJSON_AddNumberToObject(json, "max_tokens", 4000);
-    cJSON_AddNumberToObject(json, "temperature", 0.8);
-    cJSON_AddNumberToObject(json, "top_p", 1.0);
-    cJSON_AddNumberToObject(json, "frequency_penalty", 0.0);
-    cJSON_AddNumberToObject(json, "presence_penalty", 0.0);
+    cJSON_AddNumberToObject(json, "max_tokens", max_tokens);
+    cJSON_AddNumberToObject(json, "temperature", temperature);
+    cJSON_AddNumberToObject(json, "top_p", top_p);
+    cJSON_AddNumberToObject(json, "frequency_penalty", frequency_penalty);
+    cJSON_AddNumberToObject(json, "presence_penalty", presence_penalty);
     char *post_data = cJSON_Print(json);
 
     CURL *curl = curl_easy_init();
