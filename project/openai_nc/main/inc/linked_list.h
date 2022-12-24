@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "linked_list_typedef.h"
+
 #ifndef LINKED_LIST_TYPE
 typedef long long linkedlist_datatype;
 #else
