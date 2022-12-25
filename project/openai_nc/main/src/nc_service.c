@@ -12,9 +12,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "my_log.h"
-#define LINKED_LIST_TYPE int
 #include "linked_list.h"
+#include "my_log.h"
 #include "openai_api.h"
 
 #define TAG "NC_SERVICE"
@@ -93,11 +92,11 @@ void SocketAccept(int fd) {
         goto linklist_clean;
     }
 
-    SetNonBlock(0);
+    SetNonBlock(STDIN_FILENO);
     memset(&e_stdin, 0, sizeof(e_stdin));
-    e_stdin.data.fd = 0;
+    e_stdin.data.fd = STDIN_FILENO;
     e_stdin.events = EPOLLIN | EPOLLERR | EPOLLHUP | EPOLLET;
-    if (epoll_ctl(epfd, EPOLL_CTL_ADD, 0, &e_stdin) == -1) {
+    if (epoll_ctl(epfd, EPOLL_CTL_ADD, STDIN_FILENO, &e_stdin) == -1) {
         MY_LOGE(TAG, "epoll ctl %s", strerror(errno));
         goto linklist_clean;
     }
