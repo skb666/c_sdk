@@ -8,11 +8,14 @@ void LinkedListInit(LinkedList *linked_list) {
     linked_list->last = NULL;
 }
 
-void LinkedListClean(LinkedList *linked_list) {
+void LinkedListClean(LinkedList *linked_list, void *(*callback)(LinkedListNode *)) {
     LinkedListNode *p = NULL;
     while (linked_list->root) {
         p = linked_list->root;
         linked_list->root = linked_list->root->next;
+        if (NULL != callback) {
+            callback(p);
+        }
         free(p);
     }
     linked_list->last = NULL;
@@ -62,7 +65,7 @@ uint8_t LinkedListModify(LinkedList *linked_list, int index, linkedlist_datatype
     return 1;  // isok
 }
 
-int LinkedListRemove(LinkedList *linked_list, linkedlist_datatype data, int8_t (*equal)(void *, void *)) {
+int LinkedListRemove(LinkedList *linked_list, linkedlist_datatype data, int8_t (*equal)(void *, void *), void *(*callback)(LinkedListNode *)) {
     LinkedListNode *p = linked_list->root, *pt = NULL;
     int index = 0;
     if (!linked_list->root) return -1;  // fail
@@ -70,6 +73,9 @@ int LinkedListRemove(LinkedList *linked_list, linkedlist_datatype data, int8_t (
     if (equal(&(linked_list->root->data), &data)) {
         pt = linked_list->root;
         linked_list->root = linked_list->root->next;
+        if (NULL != callback) {
+            callback(pt);
+        }
         free(pt);
         linked_list->length -= 1;
         return 0;
@@ -83,6 +89,9 @@ int LinkedListRemove(LinkedList *linked_list, linkedlist_datatype data, int8_t (
             }
             pt = p->next;
             p->next = p->next->next;
+            if (NULL != callback) {
+                callback(pt);
+            }
             free(pt);
             linked_list->length -= 1;
             return index;
@@ -157,7 +166,7 @@ uint8_t LinkedListExtend(LinkedList *linked_list1, LinkedList *linked_list2) {
     return 1;  // isok
 }
 
-int LinkedListUnique(LinkedList *linked_list, int8_t (*equal)(void *, void *)) {
+int LinkedListUnique(LinkedList *linked_list, int8_t (*equal)(void *, void *), void *(*callback)(LinkedListNode *)) {
     LinkedListNode *p = NULL, *pt = NULL, *pl = NULL, *pf = NULL;
     int count = 0;
     if (!linked_list->root) return 0;
@@ -172,6 +181,9 @@ int LinkedListUnique(LinkedList *linked_list, int8_t (*equal)(void *, void *)) {
                 }
                 pf = p;
                 pl->next = p->next;
+                if (NULL != callback) {
+                    callback(pf);
+                }
                 free(pf);
                 linked_list->length -= 1;
                 count++;
@@ -195,12 +207,12 @@ uint8_t LinkedListReverse(LinkedList *linked_list) {
     while (p) {
         isok = LinkedListInsert(&linklist_temp, p->data, 0);
         if (!isok) {
-            LinkedListClean(&linklist_temp);
+            LinkedListClean(&linklist_temp, NULL);
             return 0;
         }
         p = p->next;
     }
-    LinkedListClean(linked_list);
+    LinkedListClean(linked_list, NULL);
     *linked_list = linklist_temp;
     return 1;  // isok
 }
